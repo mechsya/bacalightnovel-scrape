@@ -1,0 +1,304 @@
+generator client {
+    provider = "prisma-client-js"
+    output   = "../generated/prisma"
+}
+
+datasource db {
+    provider = "mysql"
+    url      = env("DATABASE_URL")
+}
+
+model announcements {
+    id         BigInt               @id @default(autoincrement()) @db.UnsignedBigInt
+    slug       String               @db.VarChar(255)
+    title      String               @db.VarChar(255)
+    content    String?              @db.Text
+    user_id    BigInt               @db.UnsignedBigInt
+    status     announcements_status
+    created_at DateTime?            @db.Timestamp(0)
+    updated_at DateTime?            @db.Timestamp(0)
+    users      users                @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "announcements_user_id_foreign")
+
+    @@index([id], map: "announcements_id_index")
+    @@index([slug], map: "announcements_slug_index")
+    @@index([user_id], map: "announcements_user_id_foreign")
+}
+
+model bookmarks {
+    id         BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+    user_id    BigInt    @db.UnsignedBigInt
+    novel_id   Int       @db.UnsignedInt
+    created_at DateTime? @db.Timestamp(0)
+    updated_at DateTime? @db.Timestamp(0)
+    novels     novels    @relation(fields: [novel_id], references: [id], onDelete: Cascade, map: "bookmarks_novel_id_foreign")
+    users      users     @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "bookmarks_user_id_foreign")
+
+    @@index([novel_id], map: "bookmarks_novel_id_index")
+    @@index([user_id], map: "bookmarks_user_id_index")
+}
+
+model cache {
+    key        String @id @db.VarChar(255)
+    value      String @db.MediumText
+    expiration Int
+}
+
+model cache_locks {
+    key        String @id @db.VarChar(255)
+    owner      String @db.VarChar(255)
+    expiration Int
+}
+
+model chapters {
+    id             BigInt      @id @default(autoincrement()) @db.UnsignedBigInt
+    novel_id       Int         @db.UnsignedInt
+    slug           String      @unique(map: "chapters_slug_unique") @db.VarChar(255)
+    title          String      @db.VarChar(255)
+    content_length Int         @default(0)
+    volume         String      @db.VarChar(10)
+    chapter        String      @db.VarChar(10)
+    content        String      @db.LongText
+    view           BigInt      @default(0)
+    created_at     DateTime?   @default(now()) @db.Timestamp(0)
+    updated_at     DateTime?   @db.Timestamp(0)
+    novels         novels      @relation(fields: [novel_id], references: [id], onDelete: Cascade, map: "chapters_novel_id_foreign")
+    histories      histories[]
+
+    @@index([id], map: "chapters_id_index")
+    @@index([novel_id], map: "chapters_novel_id_index")
+    @@index([title], map: "chapters_title_index")
+}
+
+model comments {
+    id             BigInt           @id @default(autoincrement()) @db.UnsignedBigInt
+    user_id        BigInt           @db.UnsignedBigInt
+    novel_id       Int              @db.UnsignedInt
+    content        String           @db.Text
+    like           BigInt           @default(0)
+    created_at     DateTime?        @db.Timestamp(0)
+    updated_at     DateTime?        @db.Timestamp(0)
+    novels         novels           @relation(fields: [novel_id], references: [id], onDelete: Cascade, map: "comments_novel_id_foreign")
+    users          users            @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "comments_user_id_foreign")
+    like_histories like_histories[]
+
+    @@index([novel_id], map: "comments_novel_id_index")
+    @@index([user_id], map: "comments_user_id_index")
+}
+
+model events {
+    id         BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+    slug       String    @db.VarChar(255)
+    image      String    @db.VarChar(255)
+    title      String    @db.VarChar(255)
+    content    String?   @db.Text
+    created_at DateTime? @db.Timestamp(0)
+    updated_at DateTime? @db.Timestamp(0)
+
+    @@index([id], map: "events_id_index")
+    @@index([slug], map: "events_slug_index")
+}
+
+model failed_jobs {
+    id         BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+    uuid       String   @unique(map: "failed_jobs_uuid_unique") @db.VarChar(255)
+    connection String   @db.Text
+    queue      String   @db.Text
+    payload    String   @db.LongText
+    exception  String   @db.LongText
+    failed_at  DateTime @default(now()) @db.Timestamp(0)
+}
+
+model global_chats {
+    id         BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+    user_id    BigInt    @db.UnsignedBigInt
+    content    String    @db.VarChar(255)
+    created_at DateTime? @db.Timestamp(0)
+    updated_at DateTime? @db.Timestamp(0)
+    users      users     @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "global_chats_user_id_foreign")
+
+    @@index([id], map: "global_chats_id_index")
+    @@index([user_id], map: "global_chats_user_id_index")
+}
+
+model histories {
+    id         BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+    user_id    BigInt    @db.UnsignedBigInt
+    chapter_id BigInt    @db.UnsignedBigInt
+    created_at DateTime? @db.Timestamp(0)
+    updated_at DateTime? @db.Timestamp(0)
+    chapters   chapters  @relation(fields: [chapter_id], references: [id], onDelete: Cascade, map: "histories_chapter_id_foreign")
+    users      users     @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "histories_user_id_foreign")
+
+    @@index([chapter_id], map: "histories_chapter_id_index")
+    @@index([user_id], map: "histories_user_id_index")
+}
+
+model identities {
+    id              BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+    user_id         BigInt    @db.UnsignedBigInt
+    picture         String    @default("default.png") @db.VarChar(255)
+    coin            Int       @default(0)
+    premium         Boolean   @default(false)
+    expired_premium DateTime? @db.Timestamp(0)
+    created_at      DateTime? @db.Timestamp(0)
+    updated_at      DateTime? @db.Timestamp(0)
+    users           users     @relation(fields: [user_id], references: [id], map: "identities_user_id_foreign")
+
+    @@index([user_id], map: "identities_user_id_index")
+}
+
+model job_batches {
+    id             String  @id @db.VarChar(255)
+    name           String  @db.VarChar(255)
+    total_jobs     Int
+    pending_jobs   Int
+    failed_jobs    Int
+    failed_job_ids String  @db.LongText
+    options        String? @db.MediumText
+    cancelled_at   Int?
+    created_at     Int
+    finished_at    Int?
+}
+
+model jobs {
+    id           BigInt @id @default(autoincrement()) @db.UnsignedBigInt
+    queue        String @db.VarChar(255)
+    payload      String @db.LongText
+    attempts     Int    @db.UnsignedTinyInt
+    reserved_at  Int?   @db.UnsignedInt
+    available_at Int    @db.UnsignedInt
+    created_at   Int    @db.UnsignedInt
+
+    @@index([queue], map: "jobs_queue_index")
+}
+
+model like_histories {
+    id         BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+    user_id    BigInt    @db.UnsignedBigInt
+    comment_id BigInt    @db.UnsignedBigInt
+    created_at DateTime? @db.Timestamp(0)
+    updated_at DateTime? @db.Timestamp(0)
+    comments   comments  @relation(fields: [comment_id], references: [id], onDelete: Cascade, map: "like_histories_comment_id_foreign")
+    users      users     @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "like_histories_user_id_foreign")
+
+    @@index([comment_id], map: "like_histories_comment_id_index")
+    @@index([user_id], map: "like_histories_user_id_index")
+}
+
+model migrations {
+    id        Int    @id @default(autoincrement()) @db.UnsignedInt
+    migration String @db.VarChar(255)
+    batch     Int
+}
+
+model novels {
+    id         Int           @id @default(autoincrement()) @db.UnsignedInt
+    slug       String        @unique(map: "novels_slug_unique") @db.VarChar(255)
+    title      String        @db.VarChar(255)
+    author     String        @db.VarChar(255)
+    status     novels_status
+    cover      String        @db.VarChar(255)
+    ranting    String        @default("N/A") @db.VarChar(255)
+    genre      String        @db.VarChar(255)
+    sinopsis   String?       @db.Text
+    view       BigInt        @default(0)
+    adult      Boolean       @default(false)
+    created_at DateTime?     @default(now()) @db.Timestamp(0)
+    updated_at DateTime?     @updatedAt
+    bookmarks  bookmarks[]
+    chapters   chapters[]
+    comments   comments[]
+
+    @@index([genre], map: "novels_genre_index")
+    @@index([id], map: "novels_id_index")
+    @@index([title], map: "novels_title_index")
+}
+
+model password_reset_tokens {
+    email      String    @id @db.VarChar(255)
+    token      String    @db.VarChar(255)
+    created_at DateTime? @db.Timestamp(0)
+}
+
+model personal_access_tokens {
+    id             BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+    tokenable_type String    @db.VarChar(255)
+    tokenable_id   BigInt    @db.UnsignedBigInt
+    name           String    @db.VarChar(255)
+    token          String    @unique(map: "personal_access_tokens_token_unique") @db.VarChar(64)
+    abilities      String?   @db.Text
+    last_used_at   DateTime? @db.Timestamp(0)
+    expires_at     DateTime? @db.Timestamp(0)
+    created_at     DateTime? @db.Timestamp(0)
+    updated_at     DateTime? @db.Timestamp(0)
+
+    @@index([tokenable_type, tokenable_id], map: "personal_access_tokens_tokenable_type_tokenable_id_index")
+}
+
+model reports {
+    id                               BigInt         @id @default(autoincrement()) @db.UnsignedBigInt
+    reporter_id                      BigInt?        @db.UnsignedBigInt
+    reported_id                      BigInt?        @db.UnsignedBigInt
+    target_id                        Int?
+    reason                           String?        @db.VarChar(255)
+    type                             String         @db.VarChar(255)
+    status                           reports_status @default(pending)
+    created_at                       DateTime?      @db.Timestamp(0)
+    updated_at                       DateTime?      @db.Timestamp(0)
+    users_reports_reported_idTousers users?         @relation("reports_reported_idTousers", fields: [reported_id], references: [id], onDelete: Cascade, map: "reports_reported_id_foreign")
+    users_reports_reporter_idTousers users?         @relation("reports_reporter_idTousers", fields: [reporter_id], references: [id], onDelete: Cascade, map: "reports_reporter_id_foreign")
+
+    @@index([reported_id], map: "reports_reported_id_index")
+    @@index([reporter_id], map: "reports_reporter_id_index")
+}
+
+model sessions {
+    id            String  @id @db.VarChar(255)
+    user_id       BigInt? @db.UnsignedBigInt
+    ip_address    String? @db.VarChar(45)
+    user_agent    String? @db.Text
+    payload       String  @db.LongText
+    last_activity Int
+
+    @@index([last_activity], map: "sessions_last_activity_index")
+    @@index([user_id], map: "sessions_user_id_index")
+}
+
+model users {
+    id                                 BigInt           @id @default(autoincrement()) @db.UnsignedBigInt
+    name                               String?          @unique(map: "users_name_unique") @db.VarChar(255)
+    email                              String           @unique(map: "users_email_unique") @db.VarChar(255)
+    isAdmin                            Boolean          @default(false)
+    isActive                           Boolean          @default(true)
+    email_verified_at                  DateTime?        @db.Timestamp(0)
+    password                           String           @db.VarChar(255)
+    remember_token                     String?          @db.VarChar(100)
+    created_at                         DateTime?        @db.Timestamp(0)
+    updated_at                         DateTime?        @db.Timestamp(0)
+    announcements                      announcements[]
+    bookmarks                          bookmarks[]
+    comments                           comments[]
+    global_chats                       global_chats[]
+    histories                          histories[]
+    identities                         identities[]
+    like_histories                     like_histories[]
+    reports_reports_reported_idTousers reports[]        @relation("reports_reported_idTousers")
+    reports_reports_reporter_idTousers reports[]        @relation("reports_reporter_idTousers")
+}
+
+enum novels_status {
+    completed
+    ongoing
+    new
+}
+
+enum announcements_status {
+    penting
+    umum
+}
+
+enum reports_status {
+    finished
+    pending
+    reject
+}
