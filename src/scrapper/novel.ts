@@ -32,15 +32,8 @@ export const scrapeNovelDetail = async (res: AxiosResponse) => {
       const link = $el.find("a").first();
       const numberText = $el.find(".epl-num").text().trim();
 
-      const match = numberText.match(/Vol\.\s*(\d+)\s*Ch\.\s*(\d+)/i);
-      const chapterOnlyMatch = numberText.match(/Ch\.\s*(\d+)/i);
-
-      const volume = match ? parseInt(match[1], 10) : null;
-      const chapter = match
-        ? parseInt(match[2], 10)
-        : chapterOnlyMatch
-        ? parseInt(chapterOnlyMatch[1], 10)
-        : null;
+      const volume = 0;
+      const chapter = numberText;
 
       return {
         volume,

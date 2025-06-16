@@ -112,13 +112,15 @@ const uploadChapter = async (chapter: any) => {
 };
 
 const main = async () => {
-  let page = 5;
+  let page = 1;
 
   while (true) {
     console.log(`🌐 Scraping halaman ${page}...`);
 
     const listHtml = await axiosResponse(
-      `${process.env.SCRAPE_URL}/series/?page=${page}`
+      page === 1
+        ? `${process.env.SCRAPE_URL}/tag/japanese`
+        : `${process.env.SCRAPE_URL}/tag/japanese/page/${page}`
     );
     if (!listHtml) {
       console.warn(`⚠️ Tidak bisa mengambil halaman ${page}, skip.`);
@@ -157,7 +159,7 @@ const main = async () => {
               novelId: uploadedNovel.id,
               title: chapter.title,
               content: contentChapter.content,
-              chapter: chapter.chapter?.toString(),
+              chapter: chapter.chapter,
               volume: chapter.volume?.toString(),
             });
 
